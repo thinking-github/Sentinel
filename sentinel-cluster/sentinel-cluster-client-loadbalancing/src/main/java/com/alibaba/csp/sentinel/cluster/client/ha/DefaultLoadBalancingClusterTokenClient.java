@@ -27,6 +27,7 @@ import com.alibaba.csp.sentinel.cluster.client.config.ClusterClientConfigManager
 import com.alibaba.csp.sentinel.cluster.client.config.ServerChangeObserver;
 import com.alibaba.csp.sentinel.cluster.client.ha.discovery.SentinelTokenServerDiscovery;
 import com.alibaba.csp.sentinel.cluster.client.ha.loadbalance.ConsistentHashTokenClientLoadBalancer;
+import com.alibaba.csp.sentinel.cluster.response.DynamicTokenResult;
 import com.alibaba.csp.sentinel.log.RecordLog;
 import com.alibaba.csp.sentinel.spi.Spi;
 import com.alibaba.csp.sentinel.spi.SpiLoader;
@@ -207,6 +208,23 @@ public class DefaultLoadBalancingClusterTokenClient implements ClusterTokenClien
     public void releaseConcurrentToken(Long tokenId) {
         //ignore
     }
+
+    
+    public DynamicTokenResult requestDynamicToken(Long ruleId, int maxCount, int lastCount) {
+        LoadBalanceContext loadBalanceContext = new DefaultLoadBalanceContext(tokenServerName);
+        loadBalanceContext.setAttribute("ruleId", ruleId);
+        loadBalanceContext.setAttribute("maxCount", maxCount);
+        loadBalanceContext.setAttribute("lastCount", lastCount);
+
+        ClusterTokenClient client = selectClusterTokenClient(loadBalanceContext);
+        if (client == null) {
+            return new DynamicTokenResult(TokenResultStatus.FAIL);
+        }
+        DefaultClusterTokenClient clusterTokenClient = (DefaultClusterTokenClient) client;
+
+        return clusterTokenClient.requestDynamicToken(ruleId, maxCount, lastCount);
+    }
+    
 
     private TokenResult requestWithLoadBalanceInternal(LoadBalanceContext loadBalanceContext, Function<ClusterTokenClient, TokenResult> resultFunction) {
         ClusterTokenClient client = selectClusterTokenClient(loadBalanceContext);

@@ -1,1 +1,1 @@
-com.alibaba.csp.sentinel.cluster.client.ha.discovery.SentinelTokenServerDiscovery
+com.alibaba.csp.sentinel.cluster.client.ha.discovery.LocalSentinelTokenServerDiscovery

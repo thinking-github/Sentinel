@@ -33,12 +33,29 @@
 
         <dependency>
             <groupId>com.alibaba.csp</groupId>
+            <artifactId>sentinel-cluster-client-loadbalancing</artifactId>
+            <version>1.8.9-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>com.alibaba.csp</groupId>
+            <artifactId>sentinel-cluster-common-default</artifactId>
+            <version>1.8.9-SNAPSHOT</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.alibaba.csp</groupId>
             <artifactId>sentinel-datasource-nacos</artifactId>
         </dependency>
         <dependency>
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-classic</artifactId>
             <version>1.2.11</version>
+        </dependency>
+
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 </project>

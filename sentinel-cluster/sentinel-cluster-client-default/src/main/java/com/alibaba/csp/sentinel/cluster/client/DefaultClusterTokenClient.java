@@ -15,6 +15,7 @@
  */
 package com.alibaba.csp.sentinel.cluster.client;
 
+import java.net.InetAddress;
 import java.util.Collection;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -29,9 +30,12 @@ import com.alibaba.csp.sentinel.cluster.client.config.ClusterClientConfigManager
 import com.alibaba.csp.sentinel.cluster.client.config.ServerChangeObserver;
 import com.alibaba.csp.sentinel.cluster.log.ClusterClientStatLogUtil;
 import com.alibaba.csp.sentinel.cluster.request.ClusterRequest;
+import com.alibaba.csp.sentinel.cluster.request.data.DynamicFlowRequestData;
 import com.alibaba.csp.sentinel.cluster.request.data.FlowRequestData;
 import com.alibaba.csp.sentinel.cluster.request.data.ParamFlowRequestData;
 import com.alibaba.csp.sentinel.cluster.response.ClusterResponse;
+import com.alibaba.csp.sentinel.cluster.response.DynamicTokenResult;
+import com.alibaba.csp.sentinel.cluster.response.data.DynamicFlowTokenResponseData;
 import com.alibaba.csp.sentinel.cluster.response.data.FlowTokenResponseData;
 import com.alibaba.csp.sentinel.log.RecordLog;
 import com.alibaba.csp.sentinel.util.AssertUtil;
@@ -49,6 +53,19 @@ public class DefaultClusterTokenClient implements ClusterTokenClient {
     private TokenServerDescriptor serverDescriptor;
 
     private final AtomicBoolean shouldStart = new AtomicBoolean(false);
+
+    private static long localIp;
+    static {
+        try {
+            InetAddress addr = InetAddress.getLocalHost();
+            addr.getHostAddress();
+            localIp = 1;
+        }
+        catch (Exception e) {
+            localIp = -1;
+            RecordLog.error("Failed to get localIp.", e);
+        }
+    }
 
     public DefaultClusterTokenClient() {
         ClusterClientConfigManager.addServerChangeObserver(new ServerChangeObserver() {
@@ -198,6 +215,38 @@ public class DefaultClusterTokenClient implements ClusterTokenClient {
 
     @Override
     public void releaseConcurrentToken(Long tokenId) {
+    }
+
+    
+    public DynamicTokenResult requestDynamicToken(Long flowId, int maxCount, int lastCount) {
+        if (transportClient == null) {
+            RecordLog.warn(
+                    "[CustomizedClusterTokenClient] Client not created, please check your config for cluster client");
+            return new DynamicTokenResult(TokenResultStatus.FAIL);
+        }
+
+        DynamicFlowRequestData data = new DynamicFlowRequestData()
+                .setFlowId(flowId).setMaxCount(maxCount)
+                .setLastCount(lastCount).setIp(localIp);
+
+        String serverIp = serverDescriptor.getHost();
+        ClusterRequest<DynamicFlowRequestData> request = new ClusterRequest<>(ClusterConstants.MSG_TYPE_DYNAMIC_FLOW, data);
+        try {
+            ClusterResponse response = transportClient.sendRequest(request);
+            DynamicTokenResult result = new DynamicTokenResult(response.getStatus(),serverIp);
+            if (response.getData() != null) {
+                DynamicFlowTokenResponseData responseData = (DynamicFlowTokenResponseData)response.getData();
+                result.setCount(responseData.getCount())
+                        .setNodes(responseData.getNodes())
+                        .setWaitInMs(responseData.getWaitInMs());
+            }
+            logForResult(result);
+            return result;
+        }
+        catch (Exception ex) {
+            ClusterClientStatLogUtil.log(ex.getMessage());
+            return new DynamicTokenResult(TokenResultStatus.FAIL,serverIp);
+        }
     }
 
     private void logForResult(TokenResult result) {

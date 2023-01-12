@@ -13,26 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alibaba.csp.sentinel.cluster.client;
+package com.alibaba.csp.sentinel.cluster.server.codec.data;
 
-import com.alibaba.csp.sentinel.cluster.ClusterConstants;
+import com.alibaba.csp.sentinel.cluster.codec.EntityWriter;
+import com.alibaba.csp.sentinel.cluster.response.data.DynamicFlowTokenResponseData;
+import io.netty.buffer.ByteBuf;
 
 /**
- * @author Eric Zhao
- * @since 1.4.0
+ * @author cdliuhaibo
  */
-public final class ClientConstants {
+public class DynamicFlowResponseDataWriter implements EntityWriter<DynamicFlowTokenResponseData, ByteBuf> {
 
-    public static final int TYPE_PING = 0;
-    public static final int TYPE_FLOW = 1;
-    public static final int TYPE_PARAM_FLOW = 2;
-
-    //动态流控
-    public static final int TYPE_DYNAMIC_FLOW = ClusterConstants.MSG_TYPE_DYNAMIC_FLOW;
-
-    public static final int CLIENT_STATUS_OFF = 0;
-    public static final int CLIENT_STATUS_PENDING = 1;
-    public static final int CLIENT_STATUS_STARTED = 2;
-
-    private ClientConstants() {}
+    @Override
+    public void writeTo(DynamicFlowTokenResponseData entity, ByteBuf out) {
+        out.writeInt(entity.getCount());
+        out.writeInt(entity.getNodes());
+        out.writeInt(entity.getWaitInMs());
+    }
 }

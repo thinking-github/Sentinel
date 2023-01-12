@@ -13,19 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alibaba.csp.sentinel.demo.cluster;
-
-import java.util.Collections;
+package com.alibaba.csp.sentinel.cluster;
 
 import com.alibaba.csp.sentinel.cluster.server.ClusterTokenServer;
 import com.alibaba.csp.sentinel.cluster.server.SentinelDefaultTokenServer;
 import com.alibaba.csp.sentinel.cluster.server.config.ClusterServerConfigManager;
 import com.alibaba.csp.sentinel.cluster.server.config.ServerTransportConfig;
 
+import java.util.Collections;
+
 /**
  * <p>Cluster server demo (alone mode).</p>
  * <p>Here we init the cluster server dynamic data sources in
- * {@link com.alibaba.csp.sentinel.demo.cluster.init.DemoClusterServerInitFunc}.</p>
+ * .</p>
  *
  * @author Eric Zhao
  * @since 1.4.0
@@ -41,8 +41,8 @@ public class ClusterServerDemo {
         // See the sample in DemoClusterServerInitFunc for detail.
         ClusterServerConfigManager.loadGlobalTransportConfig(new ServerTransportConfig()
             .setIdleSeconds(600)
-            .setPort(7001));
-        ClusterServerConfigManager.loadServerNamespaceSet(Collections.singleton(DemoConstants.APP_NAME));
+            .setPort(11111));
+        ClusterServerConfigManager.loadServerNamespaceSet(Collections.singleton("appA"));
 
         // Start the server.
         tokenServer.start();
